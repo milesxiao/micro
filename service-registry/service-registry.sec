@@ -1,0 +1,6 @@
+FROM  java:8u102-jdk
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ADD /code/service-registry/target/service-registry-1.0.1.jar /service-registry.jar
+ADD /code/wait-for-it.sh /
+
+CMD ["java","-jar","/service-registry.jar"]

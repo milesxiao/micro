@@ -1,0 +1,12 @@
+
+spring:
+  application:
+    name: api_gateway
+  profiles:
+    default: dev
+  cloud:
+    config:
+      uri: http://localhost:8888
+      env: default # optional
+      name: ${spring.application.name}
+      profile: dev

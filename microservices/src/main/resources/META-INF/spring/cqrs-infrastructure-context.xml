@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2016.  tdcarefor.me. All rights reserved.
+  ~
+  -->
+<!--基于Axon框架的CQRS配置：commandBus、eventBus 等配置-->
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:axon="http://www.axonframework.org/schema/core"
+       xmlns:axon-amqp="http://www.axonframework.org/schema/amqp"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.axonframework.org/schema/core http://www.axonframework.org/schema/axon-core.xsd
+       http://www.axonframework.org/schema/amqp http://www.axonframework.org/schema/axon-amqp-2.1.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd ">
+
+
+    <!--<context:component-scan base-package="me.tdcarefor"/>-->
+    <!--&lt;!&ndash; 支持axon 注解,自动注册@EventHandler @CommandHandler，-->
+    <!--有多个eventBus commandBus时需要指定这两个参数。-->
+    <!--&ndash;&gt;-->
+    <!--<axon:annotation-config />-->
+    <!--&lt;!&ndash; 定义用来发送领域事件的消息队列&ndash;&gt;-->
+    <!--<axon-amqp:terminal id="terminal2"-->
+                        <!--connection-factory="rabbitMQConnection"-->
+                        <!--transactional="true"-->
+                        <!--exchange-name="tdcloudExchange">-->
+        <!--<axon-amqp:default-configuration acknowledge="auto"-->
+                                         <!--transaction-size="1"-->
+                                         <!--transaction-manager="txManager2"/>-->
+    <!--</axon-amqp:terminal>-->
+    <!--<axon:event-bus id="eventBus" terminal="terminal2" />-->
+
+
+    <!--<bean id="loggingErrorHandler" class="org.springframework.amqp.rabbit.listener.ConditionalRejectingErrorHandler"/>-->
+    <!--&lt;!&ndash; 序列化对象&ndash;&gt;-->
+    <!--<bean id="serializer" class="org.axonframework.serializer.xml.XStreamSerializer"/>-->
+    <!--&lt;!&ndash; 领域事件异步消费时消费者调用顺序&ndash;&gt;-->
+    <!--<bean id="sequentialPerAggregatePolicy" class="org.axonframework.eventhandling.async.SequentialPerAggregatePolicy"/>-->
+
+   <!--&lt;!&ndash; 定义领域事件分发处理器，只有当eventBus 指定了terminal 参数时才起作用。-->
+   <!--一个系统中可以定义多个分发处理器，<axon:selectors> 来指定分发器所对应的消费者（EventHandler），-->
+   <!--一般将此文件与 <axon:event-sourcing-repository> 定义的聚合根放在同一个文件中，-->
+   <!--方便查看。-->
+   <!--&ndash;&gt;-->
+    <!--<axon:cluster  id="myDefaultClusterEP"  default="true">-->
+        <!--<axon:meta-data>-->
+            <!--<entry key="AMQP.Config">-->
+                <!--<axon-amqp:configuration queue-name="tdcloudQueue"/>-->
+            <!--</entry>-->
+        <!--</axon:meta-data>-->
+        <!--&lt;!&ndash;<bean id="asynCluster" class="org.axonframework.eventhandling.async.AsynchronousCluster"  >&ndash;&gt;-->
+        <!--&lt;!&ndash;<constructor-arg name="identifier"  value="myDefaultCluster1"/>&ndash;&gt;-->
+        <!--&lt;!&ndash;<constructor-arg name="executor" ref="taskExecutor"/>&ndash;&gt;-->
+        <!--&lt;!&ndash;&lt;!&ndash;<constructor-arg name="transactionManager" ref="txManager2"/>&ndash;&gt;&ndash;&gt;-->
+        <!--&lt;!&ndash;<constructor-arg name="sequencingPolicy" ref="policyId"/>&ndash;&gt;-->
+        <!--&lt;!&ndash;</bean>&ndash;&gt;-->
+    <!--</axon:cluster>-->
+
+
+<!--&lt;!&ndash; 分布式事务管理器，将领域事件保存到eventStore 发送到 消息队列 等需要有分布式事务支持，-->
+ <!--用于保证事务的完整性。此处用流行的atomikos做为分布式事务管理器。-->
+ <!--axon-amqp:default-configuration-->
+ <!--axon:command-bus-->
+ <!--等需要事务管理的地方可用此配置。-->
+ <!--&ndash;&gt;-->
+    <!--<bean id="txManager2" class="org.springframework.transaction.jta.JtaTransactionManager">-->
+        <!--<property name="transactionManager">-->
+            <!--<bean class="com.atomikos.icatch.jta.UserTransactionManager" init-method="init" destroy-method="close">-->
+                <!--<property name="forceShutdown" value="true"/>-->
+                <!--<property name="transactionTimeout" value="300"/>-->
+            <!--</bean>-->
+        <!--</property>-->
+        <!--<property name="userTransaction">-->
+            <!--<bean class="com.atomikos.icatch.jta.UserTransactionImp">-->
+                <!--<property name="transactionTimeout" value="300"/>-->
+            <!--</bean>-->
+        <!--</property>-->
+    <!--</bean>-->
+
+
+<!--&lt;!&ndash; commandBus 配置，指明了事务管理器txManager2,也可不设置，请参考官方文档，此配置使用的是简单同步commandBus-->
+<!--可使用异步方案，方法请参考官方文档。&ndash;&gt;-->
+    <!--<bean id="scheduledThreadPoolExecutor" class="java.util.concurrent.ScheduledThreadPoolExecutor" >-->
+        <!--<constructor-arg index="0"  value="1"/>-->
+    <!--</bean>-->
+    <!--<bean id="commandRetryScheduler" class="org.axonframework.commandhandling.gateway.IntervalRetryScheduler">-->
+        <!--<constructor-arg index="0"  ref="scheduledThreadPoolExecutor"/>-->
+        <!--<constructor-arg index="1" value="10"/>-->
+        <!--<constructor-arg index="2" value="5"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="commandGateway"  class="org.axonframework.commandhandling.gateway.CommandGatewayFactoryBean" >-->
+        <!--<property name="commandBus" ref="disruptorCommandBus"/>-->
+        <!--<property name="retryScheduler" ref="commandRetryScheduler"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="snapshotter" class="org.axonframework.eventsourcing.SpringAggregateSnapshotter">-->
+        <!--<property name="eventStore" ref="eventStore"/>-->
+        <!--<property name="executor" ref="taskExecutor"/>-->
+    <!--</bean>-->
+   <!--&lt;!&ndash; 多线程任务执行器定义&ndash;&gt;-->
+    <!--<bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">-->
+        <!--<property name="corePoolSize" value="10"/>-->
+        <!--<property name="maxPoolSize" value="20"/>-->
+        <!--<property name="waitForTasksToCompleteOnShutdown" value="true"/>-->
+    <!--</bean>-->
+<!--&lt;!&ndash; Axon缓存管理&ndash;&gt;-->
+    <!--<bean id="ehcache" class="org.axonframework.cache.EhCacheAdapter">-->
+        <!--<constructor-arg name="ehCache" ref="wrappedEhcache"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="wrappedEhcache" factory-bean="axonCacheManager" factory-method="getCache">-->
+        <!--<constructor-arg value="testCache"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="axonCacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"/>-->
+    <!--&lt;!&ndash;定时调度器初始化&ndash;&gt;-->
+    <!--<bean id="quartzEventScheduler" class="org.axonframework.eventhandling.scheduling.quartz.QuartzEventSchedulerFactoryBean">-->
+
+    <!--</bean>-->
+<!--&lt;!&ndash; 不同环境下的eventStore saga持久化支持，聚合根 saga 持久化可支持多种方式：-->
+<!--file-->
+<!--jdbc-->
+<!--mongodb-->
+<!--测试环境下可以用hsqldb file, 正式环境可用mongodb及mysql-->
+<!--&ndash;&gt;-->
+    <!--<beans profile="hsqldb">-->
+
+        <!--<axon:jdbc-event-store id="eventStore" data-source="hsdataSource" sql-schema="eventSqlSchema"/>-->
+
+        <!--<axon:jdbc-saga-repository id="sagaRepository" data-source="hsdataSource" sql-schema="sagaSqlSchema"/>-->
+
+        <!--<bean id="eventSqlSchema" class="org.axonframework.eventstore.jdbc.GenericEventSqlSchema"/>-->
+        <!--<bean id="sagaSqlSchema" class="org.axonframework.saga.repository.jdbc.HsqlSagaSqlSchema"/>-->
+        <!--<bean id="quartz" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">-->
+            <!--&lt;!&ndash; 注入数据源 &ndash;&gt;-->
+            <!--<property name="dataSource">-->
+                <!--<ref bean="hsdataSource" />-->
+            <!--</property>-->
+            <!--<property name="transactionManager" ref="txManager2">-->
+            <!--</property>-->
+            <!--&lt;!&ndash; 延迟30秒启动Scheduler &ndash;&gt;-->
+            <!--<property name="startupDelay" value="30"></property>-->
+        <!--</bean>-->
+
+    <!--</beans>-->
+    <!--<beans profile="mysql">-->
+
+        <!--<axon:jdbc-event-store id="eventStore" data-source="mysqldataSource" sql-schema="eventSqlSchema"/>-->
+
+        <!--<axon:jdbc-saga-repository id="sagaRepository" data-source="mysqldataSource" sql-schema="sagaSqlSchema"/>-->
+
+        <!--<bean id="eventSqlSchema" class="org.axonframework.eventstore.jdbc.GenericEventSqlSchema"/>-->
+        <!--<bean id="sagaSqlSchema" class="me.tdcarefor.axon.saga.repository.jdbc.MysqlSagaSqlSchema"/>-->
+        <!--<bean id="quartz" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">-->
+            <!--&lt;!&ndash; 注入数据源 &ndash;&gt;-->
+            <!--<property name="dataSource">-->
+                <!--<ref bean="mysqldataSource" />-->
+            <!--</property>-->
+            <!--<property name="transactionManager" ref="txManager2">-->
+            <!--</property>-->
+            <!--&lt;!&ndash; 延迟30秒启动Scheduler &ndash;&gt;-->
+            <!--<property name="startupDelay" value="30"></property>-->
+        <!--</bean>-->
+
+    <!--</beans>-->
+    <!--<beans profile="mongodb mongodbAndMysql">-->
+        <!--<bean id="eventStore" class="org.axonframework.eventstore.mongo.MongoEventStore">-->
+            <!--<constructor-arg ref="mongoTemplate"/>-->
+        <!--</bean>-->
+
+        <!--<bean id="sagaRepository" class="org.axonframework.saga.repository.mongo.MongoSagaRepository">-->
+            <!--<constructor-arg ref="mongoSagaTemplate"/>-->
+            <!--<property name="resourceInjector">-->
+                <!--<bean class="org.axonframework.saga.spring.SpringResourceInjector"/>-->
+            <!--</property>-->
+            <!--<property name="serializer" ref="serializer">-->
+            <!--</property>-->
+        <!--</bean>-->
+        <!--<bean id="quartz" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">-->
+            <!--&lt;!&ndash; 注入数据源 &ndash;&gt;-->
+            <!--<property name="dataSource" ref="mysqldataSource"></property>-->
+            <!--<property name="transactionManager" ref="txManager2"></property>-->
+            <!--<property name="taskExecutor" ref="taskExecutor"></property>-->
+            <!--&lt;!&ndash; 延迟5秒启动Scheduler &ndash;&gt;-->
+            <!--<property name="startupDelay" value="5"></property>-->
+            <!--<property name="quartzProperties">-->
+                <!--<props>-->
+                    <!--<prop key="org.quartz.scheduler.instanceId" >AUTO</prop>-->
+                    <!--<prop key="org.quartz.jobStore.tablePrefix">${quartz.tablePrefix}</prop>-->
+                    <!--<prop key="org.quartz.jobStore.class">org.quartz.impl.jdbcjobstore.JobStoreTX</prop>-->
+                    <!--<prop key="org.quartz.jobStore.driverDelegateClass">org.quartz.impl.jdbcjobstore.StdJDBCDelegate</prop>-->
+                    <!--<prop key="org.quartz.jobStore.txIsolationLevelSerializable">false</prop>-->
+                    <!--<prop key="org.quartz.jobStore.dontSetAutoCommitFalse">true</prop>-->
+                <!--</props>-->
+            <!--</property>-->
+        <!--</bean>-->
+
+    <!--</beans>-->
+
+
+
+
+</beans>

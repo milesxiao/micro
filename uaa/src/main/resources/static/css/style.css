@@ -1,0 +1,45 @@
+body{
+    margin:0px;
+    padding: 0px;
+    height: 100%;
+    background-image: url(../images/bg.png);
+    background-position: center center;
+    background-repeat:no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    background-color: #f7f7f7;
+    font-family: "PingFang SC","Helvetica Neue","Hiragino Sans GB","Segoe UI","Microsoft YaHei","微软雅黑",sans-serif;
+}
+.login-box {
+    position: relative;
+    z-index: 1001;
+    width:400px;
+    margin: 7% auto;
+    padding: 30px 40px 40px;
+    border-radius: 10px;
+    background-color: #ffffff;
+}
+.login-box-body {
+    background: #ffffff;
+    padding: 20px;
+    border-top:0;
+}
+.login-box-msg {
+    margin: 0;
+    text-align: center;
+    padding: 0 20px 20px 20px;
+    font-size:26px;
+    color: #4a4a4a;
+}
+.btn-custom {
+    width:100%;
+}
+.login-footer {
+    margin:100px 0 20px 0;
+    text-align: center;
+    color:#ffffff
+}
+.login-top{
+    margin:10px 0 0 10px;
+    color:#ffffff;
+}

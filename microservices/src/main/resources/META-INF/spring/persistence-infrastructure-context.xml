@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2016.  tdcarefor.me. All rights reserved.
+  ~
+  -->
+<!--持久化相关配置，配置数据库、消息队列等外部资源-->
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+
+    <!-- hsqldb内存数据库，用于测试-->
+    <beans profile="hsqldb">
+        <jdbc:embedded-database id="hsdataSource" type="HSQL"/>
+    </beans>
+
+<!--使用Mysql时的配置，可以用mongoDB保存领域事件，mysql作为查询库-->
+    <beans profile="mongodbAndMysql mysql">
+        <!-- 数据源配置, 使用 alibaba.druid 数据库连接池 -->
+        <bean id="mysqldataSource" class="com.alibaba.druid.pool.DruidDataSource" primary="true"
+              init-method="init" destroy-method="close" autowire="byName">
+            <!-- 数据源驱动类可不写，Druid默认会自动根据URL识别DriverClass -->
+            <!-- 基本属性 url、user、password -->
+            <property name="driverClassName" value="${jdbc.driverClass}"/>
+            <property name="url" value="${jdbc.url}"/>
+            <property name="username" value="${jdbc.username}"/>
+            <property name="password" value="${jdbc.password}"/>
+
+
+            <!-- 配置初始化大小、最小、最大 -->
+            <property name="initialSize" value="${druid.initialSize}"/>
+            <property name="minIdle" value="${druid.minIdle}"/>
+            <property name="maxActive" value="${druid.maxActive}"/>
+
+            <!-- 配置获取连接等待超时的时间 -->
+            <property name="maxWait" value="${druid.maxWait}"/>
+
+            <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+            <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+
+            <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+            <property name="minEvictableIdleTimeMillis" value="300000"/>
+
+            <!-- 测试有效用的SQL Query -->
+            <property name="validationQuery" value="SELECT 'x'" />
+            <!-- 连接空闲时测试是否有效 -->
+            <property name="testWhileIdle" value="true" />
+            <!-- 获取连接时测试是否有效 -->
+            <property name="testOnBorrow" value="false" />
+            <!-- 归还连接时是否测试有效 -->
+            <property name="testOnReturn" value="false" />
+            <property name="defaultAutoCommit" value="true"/>
+
+            <!-- 打开PSCache，并且指定每个连接上PSCache的大小（Oracle使用） <property name="poolPreparedStatements"
+               value="true" /> <property name="maxPoolPreparedStatementPerConnectionSize"
+               value="20" /> -->
+            <!-- 配置监控统计拦截的filters -->
+            <property name="filters" value="stat"/>
+        </bean>
+
+
+    </beans>
+
+
+   <!--<beans >-->
+      <!--&lt;!&ndash; RabbitMQ连接参数配置&ndash;&gt;-->
+       <!--<bean id="rabbitMQConnection" class="org.springframework.amqp.rabbit.connection.CachingConnectionFactory">-->
+           <!--<constructor-arg value="${spring.rabbitmq.host}"/>-->
+           <!--<property name="username" value="${spring.rabbitmq.username}"/>-->
+           <!--<property name="password" value="${spring.rabbitmq.password}"/>-->
+           <!--<property name="channelCacheSize" value="${spring.rabbitmq.channelCacheSize}"/>-->
+       <!--</bean>-->
+
+       <!--&lt;!&ndash; Axon 框架利用MongoDB保存领域事件、Saga配置&ndash;&gt;-->
+       <!--&lt;!&ndash;<bean id="mongoSpringTemplate" class="org.springframework.data.mongodb.core.MongoTemplate" >&ndash;&gt;-->
+        <!--&lt;!&ndash;<constructor-arg name="mongo" ref="mongo" />&ndash;&gt;-->
+        <!--&lt;!&ndash;<constructor-arg name="databaseName" value="${mongo.databaseName}" />&ndash;&gt;-->
+    <!--&lt;!&ndash;</bean>&ndash;&gt;-->
+
+        <!--<bean id="mongoTemplate" class="org.axonframework.eventstore.mongo.DefaultMongoTemplate">-->
+           <!--<constructor-arg index="0" ref="mongo"/>-->
+           <!--<constructor-arg index="1" value="${mongo.databaseName}"/>-->
+           <!--<constructor-arg index="2" value="domainevents"/>-->
+           <!--<constructor-arg index="3" value="snapshotevents"/>-->
+           <!--<constructor-arg index="4" value="${mongo.authenticationDatabaseName}"/>-->
+           <!--<constructor-arg index="5" value="${mongo.userName}"/>-->
+           <!--<constructor-arg index="6" value="${mongo.password}"/>-->
+           <!--<constructor-arg index="7" value="${mongo.auth}"/>-->
+        <!--</bean>-->
+
+        <!--<bean id="mongoSagaTemplate" class="org.axonframework.saga.repository.mongo.DefaultMongoTemplate">-->
+           <!--<constructor-arg index="0" ref="mongo"/>-->
+           <!--<constructor-arg index="1" value="${mongo.databaseName}"/>-->
+           <!--<constructor-arg index="2" value="${mongo.authenticationDatabaseName}"/>-->
+           <!--<constructor-arg index="3" value="saga"/>-->
+           <!--<constructor-arg index="4" value="${mongo.userName}"/>-->
+           <!--<constructor-arg index="5" value="${mongo.password}"/>-->
+           <!--<constructor-arg index="6" value="${mongo.auth}"/>-->
+        <!--</bean>-->
+
+    <!--<mongo:mongo id="mongo" host="${mongo.host}" port="${mongo.port}"/>-->
+   <!--</beans>-->
+
+</beans>

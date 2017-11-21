@@ -1,0 +1,6 @@
+FROM  java:8u102-jdk
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ADD /code/open/target/open-1.0.1.jar /open.jar
+ADD /code/wait-for-it.sh /
+
+CMD ["java","-jar","/open.jar"]

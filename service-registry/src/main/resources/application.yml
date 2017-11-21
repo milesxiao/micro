@@ -1,0 +1,28 @@
+server:
+  port: 8761
+
+
+logging:
+  level:
+    com.netflix.discovery: 'OFF'
+    org.springframework.cloud: 'DEBUG'
+
+eureka:
+  instance:
+    hostname: localhost
+    leaseRenewalIntervalInSeconds: 5
+    statusPageUrlPath: /admin/info
+    healthCheckUrlPath: /admin/health
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+
+
+#
+#turbine:
+#  aggregator:
+#    clusterConfig: PATIENT
+#  appConfig: patient

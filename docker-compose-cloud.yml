@@ -1,0 +1,353 @@
+version: '2'
+services:
+  api-gateway:
+    image: daocloud.io/tdcare/tdcare_apigateway:dev-7d891e3
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - mongo.port=27017
+    - hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=20000000
+    - ribbon.ConnectTimeout=60000
+    - spring.rabbitmq.username=guest
+    - jdbc.password=Tdcarefor123
+    - jdbc.username=root
+    - spring.rabbitmq.channelCacheSize=25
+    - zuul.routes.start.serviceId=user
+    - mongo.databaseName=tdcare_cloud
+    - jdbc.driverClass=com.mysql.jdbc.Driver
+    - spring.rabbitmq.host=rabbitmq
+    - zuul.routes.start.path=/user/**
+    - mongo.host=mongodb
+    - ribbon.ReadTimeout=60000
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    - api.version=dev-edda6a3
+    - security.require-ssl=true
+    - spring.rabbitmq.password=guest
+    - proxy.ip=wxmini.tdcarefor.me
+    - spring.cloud.config.uri=http://config-server:8888
+    - jdbc.url=jdbc:mysql://mysql/tdcare_cloud?useUnicode=true&characterEncoding=utf8
+    depends_on:
+    - config-server
+    entrypoint: ./wait-for-it.sh config-server:8888 -t 0 -- java   -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /api-gateway.jar
+    networks:
+    - front-tier
+    - back-tier
+    ports:
+    - 8086:8086
+  nginx:
+    image: daocloud.io/tdcare/tdcare_nginx:dev-0dcc7b7
+    depends_on:
+    - api-gateway
+    ports:
+    - 80:80
+    - 443:443
+    entrypoint: /setVersion.sh dev-25f74c3
+    networks:
+    - back-tier
+    restart: always
+  uaa:
+    image: daocloud.io/tdcare/tdcare_uaa:dev-eccee29
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - proxy.ip=wxmini.tdcarefor.me
+    - jdbc.username=root
+    - spring.rabbitmq.channelCacheSize=25
+    - mongo.host=mongodb
+    - restTemplate.tdcloud.serviceUri=https://wxmini.tdcarefor.me
+    - jdbc.password=Tdcarefor123
+    - mongo.port=27017
+    - mongo.databaseName=tdcare_cloud
+    - jdbc.url=jdbc:mysql://mysql/tdcare_cloud?useUnicode=true&characterEncoding=utf8
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    - api.version=dev-25f74c3
+    - jdbc.driverClass=com.mysql.jdbc.Driver
+    - spring.rabbitmq.username=guest
+    - spring.rabbitmq.host=rabbitmq
+    - security.require-ssl=true
+    - spring.rabbitmq.password=guest
+    - spring.cloud.config.uri=http://config-server:8888
+    depends_on:
+    - config-server
+    entrypoint: ./wait-for-it.sh config-server:8888 -t 0 -- java   -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /uaa.jar
+    networks:
+    - back-tier
+  user:
+    image: daocloud.io/tdcare/tdcare_user:dev-405844d
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - api.version=dev-edda6a3
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    - spring.rabbitmq.host=rabbitmq
+    - spring.rabbitmq.username=guest
+    - spring.rabbitmq.password=guest
+    - spring.rabbitmq.channelCacheSize=25
+    - proxy.ip=wxmini.tdcarefor.me
+    - spring.cloud.config.uri=http://config-server:8888
+    - mongo.host=mongodb
+    - mongo.port=27017
+    - mongo.databaseName=tdcare_cloud
+    - jdbc.driverClass=com.mysql.jdbc.Driver
+    - jdbc.url=jdbc:mysql://mysql/tdcare_cloud?useUnicode=true&characterEncoding=utf8
+    - jdbc.username=root
+    - jdbc.password=Tdcarefor123
+    depends_on:
+    - config-server
+    entrypoint: ./wait-for-it.sh config-server:8888 -t 0 -- java   -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /user.jar
+    networks:
+    - back-tier
+  remindmsg:
+    image: daocloud.io/tdcare/tdcare_remindmsg:dev-0540100
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - proxy.ip=wxmini.tdcarefor.me
+    - jdbc.username=root
+    - spring.rabbitmq.channelCacheSize=25
+    - mongo.host=mongodb
+    - jdbc.password=Tdcarefor123
+    - mongo.port=27017
+    - mongo.databaseName=tdcare_cloud
+    - jdbc.url=jdbc:mysql://mysql/tdcare_cloud?useUnicode=true&characterEncoding=utf8
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    - api.version=dev-edda6a3
+    - jdbc.driverClass=com.mysql.jdbc.Driver
+    - spring.rabbitmq.username=guest
+    - spring.rabbitmq.host=rabbitmq
+    - spring.rabbitmq.password=guest
+    - spring.cloud.config.uri=http://config-server:8888
+    depends_on:
+    - config-server
+    entrypoint: ./wait-for-it.sh config-server:8888 -t 0 -- java   -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /remindmsg.jar
+    networks:
+    - back-tier
+    restart: 'no'
+  patient:
+    image: daocloud.io/tdcare/tdcare_patient:dev-c81df8d
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - proxy.ip=wxmini.tdcarefor.me
+    - jdbc.username=root
+    - spring.rabbitmq.channelCacheSize=25
+    - mongo.host=mongodb
+    - jdbc.password=Tdcarefor123
+    - druid.maxActive=100
+    - mongo.databaseName=tdcare_cloud
+    - mongo.port=27017
+    - jdbc.url=jdbc:mysql://mysql/tdcare_cloud?useUnicode=true&characterEncoding=utf8
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    - api.version=dev-edda6a3
+    - jdbc.driverClass=com.mysql.jdbc.Driver
+    - spring.rabbitmq.username=guest
+    - spring.rabbitmq.host=rabbitmq
+    - spring.rabbitmq.password=guest
+    - spring.cloud.config.uri=http://config-server:8888
+    depends_on:
+    - config-server
+    entrypoint: ./wait-for-it.sh config-server:8888 -t 0 -- java   -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /patient.jar
+    networks:
+    - back-tier
+  baseinfo:
+    image: daocloud.io/tdcare/tdcare_baseinfo:dev-9f5bf7a
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - proxy.ip=wxmini.tdcarefor.me
+    - jdbc.username=root
+    - spring.rabbitmq.channelCacheSize=25
+    - mongo.host=mongodb
+    - jdbc.password=Tdcarefor123
+    - mongo.port=27017
+    - mongo.databaseName=tdcare_cloud
+    - druid.maxActive=60
+    - jdbc.url=jdbc:mysql://mysql/tdcare_cloud?useUnicode=true&characterEncoding=utf8
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    - api.version=dev-edda6a3
+    - jdbc.driverClass=com.mysql.jdbc.Driver
+    - spring.rabbitmq.username=guest
+    - spring.rabbitmq.host=rabbitmq
+    - spring.rabbitmq.password=guest
+    - spring.cloud.config.uri=http://config-server:8888
+    depends_on:
+    - config-server
+    entrypoint: ./wait-for-it.sh config-server:8888 -t 0 -- java   -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /baseinfo.jar
+    networks:
+    - back-tier
+  patientbill:
+    image: daocloud.io/tdcare/tdcare_patientbill:dev-0dcc7b7
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - proxy.ip=wxmini.tdcarefor.me
+    - jdbc.username=root
+    - spring.rabbitmq.channelCacheSize=25
+    - mongo.host=mongodb
+    - jdbc.password=Tdcarefor123
+    - mongo.port=27017
+    - mongo.databaseName=tdcare_cloud
+    - druid.maxActive=60
+    - jdbc.url=jdbc:mysql://mysql/tdcare_cloud?useUnicode=true&characterEncoding=utf8
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    - api.version=dev-edda6a3
+    - jdbc.driverClass=com.mysql.jdbc.Driver
+    - spring.rabbitmq.username=guest
+    - spring.rabbitmq.host=rabbitmq
+    - spring.rabbitmq.password=guest
+    - spring.cloud.config.uri=http://config-server:8888
+    depends_on:
+    - config-server
+    entrypoint: ./wait-for-it.sh config-server:8888 -t 0 -- java   -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /patientbill.jar
+    networks:
+    - back-tier
+  nursingdoc:
+    image: daocloud.io/tdcare/tdcare_nursingdoc:dev-0dcc7b7
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - proxy.ip=wxmini.tdcarefor.me
+    - jdbc.username=root
+    - spring.rabbitmq.channelCacheSize=25
+    - mongo.host=mongodb
+    - jdbc.password=Tdcarefor123
+    - mongo.port=27017
+    - mongo.databaseName=tdcare_cloud
+    - druid.maxActive=60
+    - jdbc.url=jdbc:mysql://mysql/tdcare_cloud?useUnicode=true&characterEncoding=utf8
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    - api.version=dev-edda6a3
+    - jdbc.driverClass=com.mysql.jdbc.Driver
+    - spring.rabbitmq.username=guest
+    - spring.rabbitmq.host=rabbitmq
+    - spring.rabbitmq.password=guest
+    - spring.cloud.config.uri=http://config-server:8888
+    depends_on:
+    - config-server
+    entrypoint: ./wait-for-it.sh config-server:8888 -t 0 -- java   -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /nursingdoc.jar
+    networks:
+    - back-tier
+  service-registry:
+    image: daocloud.io/tdcare/tdcare_serviceregistry:dev-0dcc7b7
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - eureka.instance.hostname=service-registry
+    - eureka.server.enable-self-preservation=false
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    ports:
+    - 8761:8761
+    depends_on:
+    - mysql
+    - mongodb
+    - rabbitmq
+    - redis
+    entrypoint: java  -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /service-registry.jar
+    networks:
+    - back-tier
+  config-server:
+    image: daocloud.io/tdcare/tdcare_configserver:dev-eccee29
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    environment:
+    - eureka.instance.hostname=config-server
+    - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/
+    depends_on:
+    - service-registry
+    entrypoint: ./wait-for-it.sh service-registry:8761 -t 0 -- java   -Duser.timezone=Asia/Shanghai  -Djava.security.egd=file:/dev/./urandom  -jar
+      /config-server.jar
+    networks:
+    - back-tier
+    ports:
+    - 8888:8888
+  rabbitmq:
+    image: daocloud.io/library/rabbitmq:3.6.6-management
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+    privileged: false
+    restart: always
+    ports:
+    - 15671:15671
+    - 4369:4369
+    - 15672:15672
+    - 25672:25672
+    - 5671:5671
+    - 5672:5672
+    environment:
+    - HOSTNAME=tdcarefor
+    - RABBITMQ_ERLANG_COOKIE=Tdcarefor123
+    networks:
+    - back-tier
+    volumes:
+    - rabbitmq-data:/var/lib/rabbitmq
+    - /var/lib/docker/volumes/hosts:/etc/hosts
+  mysql:
+    image: daocloud.io/tdcarefor/tdcaremysql:1.0.0.20170530
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+      io.daocloud.dce.compose.placement.constraints: '["node.labels.isdata == true"]'
+    privileged: false
+    restart: always
+    ports:
+    - 3306:3306
+    volumes:
+    - mysql-data:/var/lib/mysql
+    environment:
+    - MYSQL_ROOT_PASSWORD=Tdcarefor123
+    networks:
+    - back-tier
+  mongodb:
+    image: daocloud.io/library/mongo:2.6.12
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+      io.daocloud.dce.compose.placement.constraints: '["node.labels.isdata == true"]'
+    command: ''
+    privileged: false
+    restart: always
+    volumes:
+    - mongodb-data:/data/db
+    networks:
+    - back-tier
+    ports:
+    - 27017:27017
+  redis:
+    image: daocloud.io/library/redis:3.2
+    labels:
+      io.daocloud.dce.compose.endpoint-spec.mode: dnsrr
+      io.daocloud.dce.compose.placement.constraints: '["node.labels.isdata == true"]'
+    command: ''
+    privileged: false
+    restart: always
+    volumes:
+    - redis-data:/data/db
+    networks:
+    - back-tier
+    ports:
+    - 6379:6379
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
+volumes:
+  mysql-data:
+    external:
+      name: tdcare_cloud_mysql-data
+  mongodb-data:
+    external:
+      name: tdcare_cloud_mongodb-data
+  redis-data:
+    external:
+      name: tdcare_cloud_redis-data
+  rabbitmq-data:
+    external:
+      name: tdcare_cloud_rabbitmq-data

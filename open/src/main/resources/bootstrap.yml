@@ -1,0 +1,13 @@
+
+spring:
+  application:
+    name: open
+  profiles:
+    default: mongodbAndMysql
+  cloud:
+    config:
+      uri: http://localhost:8888
+      env: default # optional
+      name: ${spring.application.name}
+      profile: mongodbAndMysql
+

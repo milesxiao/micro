@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2016.  tdcarefor.me. All rights reserved.
+  ~
+  -->
+
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--<beans profile="mongodb">-->
+        <!--<mongo:repositories base-package="me.tdcarefor.*.*.query.repositories"-->
+                            <!--mongo-template-ref="mongoSpringTemplate"/>-->
+    <!--</beans>-->
+
+    <beans profile="hsqldb">
+        <jpa:repositories base-package="me.tdcarefor.*.*.query.repositories"/>
+
+        <tx:annotation-driven transaction-manager="transactionManager"/>
+
+        <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+            <property name="entityManagerFactory" ref="entityManagerFactory"/>
+        </bean>
+
+        <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+            <property name="packagesToScan" value="me.tdcarefor.*.query" />
+            <property name="dataSource" ref="hsdataSource"/>
+            <!--<property name="persistenceUnitName" value="tdnurse"/>-->
+            <property name="jpaVendorAdapter">
+                <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                    <property name="generateDdl" value="true"/>
+                </bean>
+            </property>
+            <property name="jpaProperties">
+                <props>
+                    <prop key="hibernate.show_sql">true</prop>
+                    <prop key="hibernate.generate_statistics">false</prop>
+                    <prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop>
+                </props>
+            </property>
+        </bean>
+
+    </beans>
+
+
+    <beans profile="mongodbAndMysql mysql">
+        <jpa:repositories base-package="me.tdcarefor"/>
+
+        <tx:annotation-driven transaction-manager="transactionManager"/>
+
+        <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+            <property name="entityManagerFactory" ref="entityManagerFactory"/>
+        </bean>
+
+        <bean id="entityManagerFactory" primary="true" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+            <property name="packagesToScan" value="me.tdcarefor" />
+            <property name="dataSource" ref="mysqldataSource"/>
+            <!--<property name="persistenceUnitName" value="tdnurse"/>-->
+            <property name="jpaVendorAdapter">
+                <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                    <property name="generateDdl" value="true"/>
+                </bean>
+            </property>
+            <property name="jpaProperties">
+                <props>
+                    <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
+                    <!-- 是否显示SQL -->
+                    <prop key="hibernate.show_sql">false</prop>
+                    <!-- 显示SQL是否格式化 -->
+                    <!--<prop key="hibernate.format_sql">true</prop>-->
+                    <prop key="hibernate.generate_statistics">false</prop>
+
+                </props>
+            </property>
+        </bean>
+    </beans>
+</beans>
